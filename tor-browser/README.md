@@ -1,13 +1,31 @@
 # tor-browser Dockerfile
 
-This is Jessie Frazelle's [`tor-browser` Dockerfile](https://github.com/jessfraz/dockerfiles/tree/master/tor-browser).
+The Dockerfile uses Jessie Frazelle's [`tor-browser` Dockerfile](https://github.com/jessfraz/dockerfiles/tree/master/tor-browser) as for many of its bits.  There were enough changes to warrant its own Dockerfile.
 
 ## Create a container
 
 ```
-xhost +local:root
-docker container rm tor-browser
-docker run --device /dev/snd -v /tmp/.X11-unix:/tmp/.X11-unix -v /dev/shm:/dev/shm -v /etc/machine-id:/etc/machine-id:ro -e DISPLAY=unix:0 -e TOR_VERSION=10.5.6 --name tor-browser jessfraz/tor-browser:latest &> /dev/null &
+$ cd /var/lib/machines
+$ mkdir tor-browser
+$ docker export $(docker create btoll/tor-browser:latest) | tar -x -C tor-browser
+$ sudo systemd-nspawn -M tor-browser
+```
+
+## Create the service
+
+`/etc/systemd/nspawn/tor-browser.nspawn`
+
+```
+[Exec]
+DropCapability=all
+Environment=DISPLAY=:0
+Hostname=kilgore-trout
+NoNewPrivileges=true
+Parameters=/bin/bash -c "./start-tor-browser --log /dev/stdout"
+PrivateUsers=true
+ProcessTwo=true
+User=noroot
+WorkingDirectory=/usr/local/bin/tor-browser
 ```
 
 # References
